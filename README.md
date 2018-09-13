@@ -1,6 +1,6 @@
 ## Implementation of Structured-Self-Attentive-Sentence-Embedding
 
-This is an implementation of the paper [A Structured Self-Attentive Sentence Embedding](https://arxiv.org/abs/1703.03130). This program implements most of the details in the paper. Finally, the experiment was carried out on the user review star classification task mentioned in the original paper, and used the same data set: [The reviews of Yelp Data](https://www.kaggle.com/yelp-dataset/yelp-dataset#yelp_academic_dataset_review.json). The model structure is as follows：
+This is an implementation of the paper [A Structured Self-Attentive Sentence Embedding](https://arxiv.org/abs/1703.03130)，using Mxnet/Gluon. This program implements most of the details in the paper. Finally, the experiment was carried out on the user review star classification task mentioned in the original paper, and used the same data set: [The reviews of Yelp Data](https://www.kaggle.com/yelp-dataset/yelp-dataset#yelp_academic_dataset_review.json). The model structure is as follows：
 
 ![Bi_LSTM_Attention](./images/Bi_LSTM_Attention.png)
 

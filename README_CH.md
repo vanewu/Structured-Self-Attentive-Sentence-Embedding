@@ -1,6 +1,6 @@
 ##  基于自注意力结构的句子表示的实现
 
-这是一个关于[A Structured Self-Attentive Sentence Embedding](https://arxiv.org/abs/1703.03130) 论文的实现。本程序实现了论文中的大多数细节，并选择原论文中提及到的三个实验中的用户评论情感星级进行实验，且采用相同的数据集：[The reviews of Yelp Data](https://www.kaggle.com/yelp-dataset/yelp-dataset#yelp_academic_dataset_review.json) 进行实验，模型结构如下图：
+这是一个关于[A Structured Self-Attentive Sentence Embedding](https://arxiv.org/abs/1703.03130) 论文的实现。本程序使用Mxnet/Gluon实现了论文中的大多数细节，并选择原论文中提及到的三个实验中的用户评论情感星级进行实验，且采用相同的数据集：[The reviews of Yelp Data](https://www.kaggle.com/yelp-dataset/yelp-dataset#yelp_academic_dataset_review.json) 进行实验，模型结构如下图：
 
 ![Bi_LSTM_Attention](./images/Bi_LSTM_Attention.png)
 
@@ -19,16 +19,16 @@
 1. **论文提出的注意力机制**
 
 
-   $$
+$$
    A = softmax(W_{s2}tanh(W_{s1}H^T))
-   $$
+$$
 
 2. **惩罚项约束以保证注意力的多样性**
 
 
-   $$
+$$
    P = ||(AA^T-I)||_F^2
-   $$
+$$
 
 3. **论文附录中提出的参数修剪**
 
