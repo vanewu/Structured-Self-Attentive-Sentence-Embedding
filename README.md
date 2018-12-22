@@ -1,13 +1,10 @@
-## Implementation of Structured-Self-Attentive-Sentence-Embedding
-
+# Implementation of Structured-Self-Attentive-Sentence-Embedding
+## Introduction
 This is an implementation of the paper [A Structured Self-Attentive Sentence Embedding](https://arxiv.org/abs/1703.03130)，using Mxnet/Gluon. This program implements most of the details in the paper. Finally, the experiment was carried out on the user review star classification task mentioned in the original paper, and used the same data set: [The reviews of Yelp Data](https://www.kaggle.com/yelp-dataset/yelp-dataset#yelp_academic_dataset_review.json). The model structure is as follows：
 
 ![Bi_LSTM_Attention](./images/Bi_LSTM_Attention.png)
 
-
-
 ## Requirments
-
 1. [Mxnet](https://mxnet.apache.org/)
 2. [Gluon NLP](https://gluon-nlp.mxnet.io)
 3. [Numpy](http://www.numpy.org/)
@@ -16,33 +13,25 @@ This is an implementation of the paper [A Structured Self-Attentive Sentence Emb
 
 ## Implemented
 
-1. **Attention mechanism proposed in the original paper.**
+### 1. Attention mechanism proposed in the original paper.
 
+$$ A = softmax(W_{s2}tanh(W_{s1}H^T)) $$
 
-$$
-   A = softmax(W_{s2}tanh(W_{s1}H^T))
-$$
+### 2. Punishment constraints to ensure diversity of attention.
 
-2. **Punishment constraints to ensure diversity of attention.**
+$$ P = ||(AA^T-I)||_F^2 $$
 
-
-$$
-   P = ||(AA^T-I)||_F^2
-$$
-
-3. **Parameter pruning proposed in the appendix of the paper.**
-
-
+### 3. Parameter pruning proposed in the appendix of the paper.
 
    ![prune weights](./images/prune_weights.png)
 
-4. **Gradient clip and learning rate decay.**
+### 4. Gradient clip and learning rate decay.
 
-5. **SoftmaxCrossEntropy with category weights**
+### 5. SoftmaxCrossEntropy with category weights
 
 ## For sentiment classification
 
-1. **Training parameter description**
+### 1. Training parameter description
 
    ```python
    parser.add_argument('--emsize', type=int, default=300,
@@ -90,7 +79,7 @@ $$
                            default='../data/formated_data.pkl', help='formated data path')
    ```
 
-2. **Training details**
+### 2. Training details
 
    The original paper uses 500K data as the training set, 2000 data as the validation set, and 2000 as the test set. Due to personal machine restrictions, 200 K is randomly selected as the training set and 2000 data is used as the validation set in the case of ensuring the data distribution and the original data. The weight of the WeightedSoftmaxCrossEntropy is set according to the proportion of the data category. If the data is different and needs to be used To use this loss function, you need to modify the value of the set class_weight yourself.
 
