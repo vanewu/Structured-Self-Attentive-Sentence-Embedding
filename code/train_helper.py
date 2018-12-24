@@ -61,13 +61,13 @@ def train(
                 elif loss_name == 'wsce':
                     l = loss(batch_pred, batch_y, class_weight, class_weight.shape[0])
 
-                # 惩罚项
+                # penalty (惩罚项)
                 temp = nd.batch_dot(att_output, nd.transpose(att_output, axes=(0, 2, 1))
                                     ) - nd.eye(att_output.shape[1], ctx=CTX)
                 l = l + penal_coeff * temp.norm(axis=(1, 2))
             l.backward()
 
-            # 梯度裁剪
+            # clip gradient (梯度裁剪)
             clip_params = [p.data() for p in model.collect_params().values()]
             if clip is not None:
                 norm = nd.array([0.0], CTX)
@@ -78,7 +78,7 @@ def train(
                     for param in clip_params:
                         param.grad[:] *= clip / norm
 
-            # 更新参数
+            # update trainable params (更新参数)
             trainer.step(batch_x.shape[0])
 
             batch_pred = np.argmax(nd.softmax(batch_pred, axis=1).asnumpy(), axis=1)
@@ -106,7 +106,7 @@ def train(
               '\ntime %.1f sec' % (valid_loss, acc_valid, F1_valid, time() - start))
         print('='*50)
 
-        # 学习率衰减
+        # learning rate decay (学习率衰减)
         if epoch % 2 == 0:
             trainer.set_learning_rate(trainer.learning_rate * 0.9)
 
@@ -136,7 +136,7 @@ def evaluate(data_iter_valid, model, loss, penal_coeff=0.0, class_weight=None, l
             l = loss(batch_pred, batch_y)
         elif loss_name == 'wsce':
             l = loss(batch_pred, batch_y, class_weight, class_weight.shape[0])
-        # 惩罚项
+        # penalty
         temp = nd.batch_dot(att_output, nd.transpose(att_output, axes=(0, 2, 1))
                             ) - nd.eye(att_output.shape[1], ctx=att_output.context)
         l = l + penal_coeff * temp.norm(axis=(1, 2))

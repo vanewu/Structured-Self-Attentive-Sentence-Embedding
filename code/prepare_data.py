@@ -154,10 +154,10 @@ def get_data(data_json_path, wv_name, formated_data_path):
         my_vocab = get_vocab(sentences, wv_name)
         pad_num_value = my_vocab.to_indices(PAD)
 
-        # 将输入数据转为整数索引
+        # Convert input data to integer index (将输入数据转为整数索引)
         input_idx = sentences2idx(sentences, my_vocab)
 
-        # 准备训练和验证数据迭代器
+        # Prepare train and validate data iterators (准备训练和验证数据迭代器)
         max_seq_len = 100
         input_paded = pad_sequences(input_idx, max_seq_len, pad_num_value)
         labels = np.array(labels).reshape((-1, 1)) - 1
