@@ -18,10 +18,10 @@
 # Function used for auxiliary training
 # author:kenjewu
 
-import numpy as np
 from time import time
 
 import mxnet as mx
+import numpy as np
 from mxnet import autograd, gluon, nd
 from sklearn.metrics import accuracy_score, f1_score
 
@@ -59,7 +59,8 @@ def train(
                 if loss_name == 'sce':
                     l = loss(batch_pred, batch_y)
                 elif loss_name == 'wsce':
-                    l = loss(batch_pred, batch_y, class_weight, class_weight.shape[0])
+                    l = loss(batch_pred, batch_y, class_weight,
+                             class_weight.shape[0])
 
                 # penalty (惩罚项)
                 temp = nd.batch_dot(att_output, nd.transpose(att_output, axes=(0, 2, 1))
@@ -81,7 +82,8 @@ def train(
             # update trainable params (更新参数)
             trainer.step(batch_x.shape[0])
 
-            batch_pred = np.argmax(nd.softmax(batch_pred, axis=1).asnumpy(), axis=1)
+            batch_pred = np.argmax(nd.softmax(
+                batch_pred, axis=1).asnumpy(), axis=1)
             batch_true = np.reshape(batch_y.asnumpy(), (-1, ))
             total_pred.extend(batch_pred.tolist())
             total_true.extend(batch_true.tolist())
@@ -94,11 +96,13 @@ def train(
                 print('epoch %d, batch %d, bach_train_loss %.4f, batch_train_acc %.3f' %
                       (epoch, n_batch, batch_train_loss, accuracy_score(batch_true, batch_pred)))
 
-        F1_train = f1_score(np.array(total_true), np.array(total_pred), average='weighted')
+        F1_train = f1_score(np.array(total_true), np.array(
+            total_pred), average='weighted')
         acc_train = accuracy_score(np.array(total_true), np.array(total_pred))
         train_loss /= n_batch
 
-        F1_valid, acc_valid, valid_loss = evaluate(data_iter_valid, model, loss, penal_coeff, class_weight, loss_name)
+        F1_valid, acc_valid, valid_loss = evaluate(
+            data_iter_valid, model, loss, penal_coeff, class_weight, loss_name)
 
         print('epoch %d, learning_rate %.5f \n\t train_loss %.4f, acc_train %.3f, F1_train %.3f, ' %
               (epoch, trainer.learning_rate, train_loss, acc_train, F1_train))
@@ -140,12 +144,14 @@ def evaluate(data_iter_valid, model, loss, penal_coeff=0.0, class_weight=None, l
         temp = nd.batch_dot(att_output, nd.transpose(att_output, axes=(0, 2, 1))
                             ) - nd.eye(att_output.shape[1], ctx=att_output.context)
         l = l + penal_coeff * temp.norm(axis=(1, 2))
-        total_pred.extend(np.argmax(nd.softmax(batch_pred, axis=1).asnumpy(), axis=1).tolist())
+        total_pred.extend(np.argmax(nd.softmax(
+            batch_pred, axis=1).asnumpy(), axis=1).tolist())
         total_true.extend(np.reshape(batch_y.asnumpy(), (-1,)).tolist())
         n_batch += 1
         valid_loss += l.mean().asscalar()
 
-    F1_valid = f1_score(np.array(total_true), np.array(total_pred), average='weighted')
+    F1_valid = f1_score(np.array(total_true), np.array(
+        total_pred), average='weighted')
     acc_valid = accuracy_score(np.array(total_true), np.array(total_pred))
     valid_loss /= n_batch
 

@@ -18,19 +18,18 @@
 # This is the training script
 # author: kenjewu
 
+from weighted_softmaxCE import WeightedSoftmaxCE
+from models import SelfAttentiveBiLSTM
+from prepare_data import get_data
+from utils import get_args
+import train_helper as th
+from mxnet.gluon.data import ArrayDataset, DataLoader
+from mxnet import nd, gluon, init
+import gluonnlp as nlp
+import mxnet as mx
 import os
 import warnings
 warnings.filterwarnings('ignore')
-import mxnet as mx
-import gluonnlp as nlp
-from mxnet import nd, gluon, init
-from mxnet.gluon.data import ArrayDataset, DataLoader
-
-import train_helper as th
-from utils import get_args
-from prepare_data import get_data
-from models import SelfAttentiveBiLSTM
-from weighted_softmaxCE import WeightedSoftmaxCE
 
 
 def try_gpu():
@@ -44,7 +43,7 @@ def try_gpu():
 
 
 if __name__ == '__main__':
-    # 解析参数 (Parsing command line arguments)
+    # Parsing command line arguments (解析参数)
     args = get_args()
     emsize = args.emsize
     nhide = args.nhid
@@ -66,13 +65,13 @@ if __name__ == '__main__':
     loss_name = args.loss_name
     clip = args.clip
 
-    # 设置 mxnet 随机数种子 (Set mxnet random number seed)
+    # Set mxnet random number seed (设置 mxnet 随机数种子)
     mx.random.seed(args.seed)
 
-    # 设置 gpu 或者 cpu (set the useful of gpu or cpu)
+    # set the useful of gpu or cpu (设置 gpu 或者 cpu)
     ctx = try_gpu()
 
-    # 获取训练数据与验证数据集 (Get training data and validation data set)
+    # Get training data and validation data set (获取训练数据与验证数据集)
     print('Getting the data...')
     data = get_data(args.data_json_path, args.wv_name, args.formated_data_path)
     x, y, my_vocab = data['x'], data['y'], data['vocab']
@@ -84,10 +83,12 @@ if __name__ == '__main__':
 
     data_set = ArrayDataset(nd.array(x, ctx=ctx), nd.array(y, ctx=ctx))
     train_data_set, valid_data_set = nlp.data.train_valid_split(data_set, 0.01)
-    data_iter_train = DataLoader(train_data_set, batch_size=batch_size, shuffle=True, last_batch='rollover')
-    data_iter_valid = DataLoader(valid_data_set, batch_size=batch_size, shuffle=False)
+    data_iter_train = DataLoader(
+        train_data_set, batch_size=batch_size, shuffle=True, last_batch='rollover')
+    data_iter_valid = DataLoader(
+        valid_data_set, batch_size=batch_size, shuffle=False)
 
-    # 配置模型 (Configuration model)
+    # Configuration model (配置模型)
     vocab_len = len(my_vocab)
     model = SelfAttentiveBiLSTM(vocab_len, emsize, nhide, nlayers, att_unit, att_hops, nfc, nclass,
                                 drop_prob, pool_way, prune_p, prune_q)
@@ -97,7 +98,8 @@ if __name__ == '__main__':
         model.embedding_layer.weight.set_data(embedding_weights)
         model.embedding_layer.collect_params().setattr('grad_req', 'null')
 
-    trainer = gluon.Trainer(model.collect_params(), optim, {'learning_rate': lr})
+    trainer = gluon.Trainer(model.collect_params(),
+                            optim, {'learning_rate': lr})
 
     class_weight = None
     if loss_name == 'sce':
@@ -106,11 +108,11 @@ if __name__ == '__main__':
         loss = WeightedSoftmaxCE()
         class_weight = nd.array([3.0, 5.3, 4.0, 2.0, 1.0], ctx=ctx)
 
-    # 训练 (Train)
+    # Train (训练)
     th.train(data_iter_train, data_iter_valid, model, loss, trainer, ctx,
              num_epochs, penal_coeff=penal_coeff, clip=clip, class_weight=class_weight, loss_name=loss_name)
 
-    # 保存模型 (Save the structure and parameters of the model)
+    # Save the structure and parameters of the model (保存模型)
     model_dir = args.save
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)

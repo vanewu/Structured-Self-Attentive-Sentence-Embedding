@@ -20,7 +20,7 @@
 # author: kenjewu
 
 import mxnet as mx
-from mxnet import nd, gluon
+from mxnet import gluon, nd
 from mxnet.gluon import nn, rnn
 
 
@@ -28,7 +28,8 @@ class SelfAttention(nn.HybridBlock):
     def __init__(self, att_unit, att_hops, **kwargs):
         super(SelfAttention, self).__init__(**kwargs)
         with self.name_scope():
-            self.ut_dense = nn.Dense(att_unit, activation='tanh', flatten=False)
+            self.ut_dense = nn.Dense(
+                att_unit, activation='tanh', flatten=False)
             self.et_dense = nn.Dense(att_hops, activation=None, flatten=False)
 
     def hybrid_forward(self, F, x):
@@ -52,15 +53,18 @@ class SelfAttentiveBiLSTM(nn.HybridBlock):
         super(SelfAttentiveBiLSTM, self).__init__(**kwargs)
         with self.name_scope():
             self.embedding_layer = nn.Embedding(vocab_len, emsize)
-            self.bilstm = rnn.LSTM(nhide, num_layers=nlayers, dropout=drop_prob, bidirectional=True)
+            self.bilstm = rnn.LSTM(
+                nhide, num_layers=nlayers, dropout=drop_prob, bidirectional=True)
             self.att_encoder = SelfAttention(att_unit, att_hops)
             self.dense = nn.Dense(nfc, activation='tanh')
             self.output_layer = nn.Dense(nclass)
 
             self.dense_p, self.dense_q = None, None
             if all([prune_p, prune_q]):
-                self.dense_p = nn.Dense(prune_p, activation='tanh', flatten=False)
-                self.dense_q = nn.Dense(prune_q, activation='tanh', flatten=False)
+                self.dense_p = nn.Dense(
+                    prune_p, activation='tanh', flatten=False)
+                self.dense_q = nn.Dense(
+                    prune_q, activation='tanh', flatten=False)
 
             self.drop_prob = drop_prob
             self.pool_way = pool_way
@@ -82,7 +86,8 @@ class SelfAttentiveBiLSTM(nn.HybridBlock):
             p_section = self.dense_p(att_output)
             # q_section: [batch, emsize, prune_q]
             q_section = self.dense_q(F.transpose(att_output, axes=(0, 2, 1)))
-            dense_input = F.Dropout(F.concat(F.flatten(p_section), F.flatten(q_section), dim=-1), self.drop_prob)
+            dense_input = F.Dropout(
+                F.concat(F.flatten(p_section), F.flatten(q_section), dim=-1), self.drop_prob)
 
         dense_out = self.dense(dense_input)
         output = self.output_layer(F.Dropout(dense_out, self.drop_prob))

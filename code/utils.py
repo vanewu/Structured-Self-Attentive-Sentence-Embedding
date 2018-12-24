@@ -14,9 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 # Some general function modules
 # author: kenjewu
-
 
 import argparse
 
@@ -46,13 +46,17 @@ def get_args():
                         help='initial learning rate')
     parser.add_argument('--epochs', type=int, default=10,
                         help='upper epoch limit')
-    parser.add_argument('--loss-name', type=str, default='sce', help='loss function name')
+    parser.add_argument('--loss-name', type=str,
+                        default='sce', help='loss function name')
     parser.add_argument('--seed', type=int, default=2018,
                         help='random seed')
 
-    parser.add_argument('--pool-way', type=str, default='flatten', help='pool att output way')
-    parser.add_argument('--prune-p', type=int, default=None, help='prune p size')
-    parser.add_argument('--prune-q', type=int, default=None, help='prune q size')
+    parser.add_argument('--pool-way', type=str,
+                        default='flatten', help='pool att output way')
+    parser.add_argument('--prune-p', type=int,
+                        default=None, help='prune p size')
+    parser.add_argument('--prune-q', type=int,
+                        default=None, help='prune q size')
 
     parser.add_argument('--batch-size', type=int, default=64,
                         help='batch size for training')
@@ -63,10 +67,12 @@ def get_args():
     parser.add_argument('--penalization-coeff', type=float, default=0.1,
                         help='the penalization coefficient')
 
-    parser.add_argument('--save', type=str, default='../models', help='path to save the final model')
+    parser.add_argument('--save', type=str, default='../models',
+                        help='path to save the final model')
     parser.add_argument('--wv-name', type=str, choices={'glove', 'w2v', 'fasttext', 'random'},
                         default='random', help='word embedding way')
-    parser.add_argument('--data-json-path', type=str, default='../data/sub_review_labels.json', help='raw data path')
+    parser.add_argument('--data-json-path', type=str,
+                        default='../data/sub_review_labels.json', help='raw data path')
     parser.add_argument('--formated-data-path', type=str,
                         default='../data/formated_data.pkl', help='formated data path')
 

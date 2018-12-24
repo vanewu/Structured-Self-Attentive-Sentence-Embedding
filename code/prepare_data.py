@@ -18,19 +18,19 @@
 # This module is used to parse the raw data and process the training data needed for the model.
 # author: kenjewu
 
+import collections
+import json
+import os
+import pickle
+import re
+import warnings
+
+import gluonnlp as nlp
 import mxnet as mx
 import numpy as np
-import gluonnlp as nlp
-
-import os
-import re
-import json
-import pickle
-import collections
-import warnings
-warnings.filterwarnings('ignore')
-
 from sklearn.model_selection import train_test_split
+
+warnings.filterwarnings('ignore')
 
 
 UNK = '<unk>'
@@ -101,12 +101,14 @@ def get_vocab(sentences, wv_name):
     my_vocab = nlp.Vocab(token_counter)
 
     if wv_name == 'glove':
-        my_embedding = nlp.embedding.GloVe(source='glove.6B.50d', embedding_root='..data/embedding')
+        my_embedding = nlp.embedding.GloVe(
+            source='glove.6B.50d', embedding_root='..data/embedding')
     elif wv_name == 'w2v':
         my_embedding = nlp.embedding.Word2Vec(
             source='GoogleNews-vectors-negative300', embedding_root='..data/embedding')
     elif wv_name == 'fasttext':
-        my_embedding = nlp.embedding.FastText(source='wiki.simple', embedding_root='..data/embedding')
+        my_embedding = nlp.embedding.FastText(
+            source='wiki.simple', embedding_root='..data/embedding')
     else:
         my_embedding = None
 
