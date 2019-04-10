@@ -15,22 +15,20 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# This module is used to parse the raw data and process the training data needed for the model.
 # author: kenjewu
 
-import collections
+"""
+This module is used to parse the raw data and process the training data needed for the model.
+"""
+
 import json
 import os
 import pickle
 import re
-import warnings
 
 import gluonnlp as nlp
 import mxnet as mx
 import numpy as np
-from sklearn.model_selection import train_test_split
-
-warnings.filterwarnings('ignore')
 
 
 UNK = '<unk>'
@@ -38,10 +36,16 @@ PAD = '<pad>'
 
 
 def clean_str(string):
-    """
-    Tokenization/string cleaning.
+    """Tokenization/string cleaning.
     Original from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
+
+    Args:
+        string (str): the input string
+
+    Returns:
+        str: processed string
     """
+
     string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
     string = re.sub(r"\'s", " \'s", string)
     string = re.sub(r"\'ve", " \'ve", string)
@@ -51,9 +55,9 @@ def clean_str(string):
     string = re.sub(r"\'ll", " \'ll", string)
     string = re.sub(r",", " , ", string)
     string = re.sub(r"!", " ! ", string)
-    string = re.sub(r"\(", " \( ", string)
-    string = re.sub(r"\)", " \) ", string)
-    string = re.sub(r"\?", " \? ", string)
+    string = re.sub(r"\(", r" \( ", string)
+    string = re.sub(r"\)", r" \) ", string)
+    string = re.sub(r"\?", r" \? ", string)
     string = re.sub(r"\s{2,}", " ", string)
 
     return string.strip().lower()
@@ -69,8 +73,6 @@ def pad_sequences(sequences, max_len, pad_value):
     Returns:
         pades_seqs: A numpy array
     '''
-
-    # max_len = max(map(lambda x: len(x), sequences))
 
     paded_seqs = np.zeros((len(sequences), max_len))
     for idx, seq in enumerate(sequences):
