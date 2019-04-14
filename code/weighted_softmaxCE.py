@@ -15,15 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# weighted softmax cross entropy layer
 # author: kenjewu
+
+"""
+weighted softmax cross entropy layer
+"""
+
 
 import mxnet as mx
 from mxnet.gluon import nn
 
 
 class WeightedSoftmaxCE(nn.HybridBlock):
-    def __init__(self, sparse_label=True, from_logits=False,  **kwargs):
+    """Weight the loss value for each category calculated using softmax cross entropy
+    """
+
+    def __init__(self, sparse_label=True, from_logits=False, **kwargs):
         super(WeightedSoftmaxCE, self).__init__(**kwargs)
         with self.name_scope():
             self.sparse_label = sparse_label
