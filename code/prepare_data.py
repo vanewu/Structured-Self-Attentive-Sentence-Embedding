@@ -25,14 +25,12 @@ import json
 import os
 import pickle
 import re
+import itertools
 
 import gluonnlp as nlp
 import mxnet as mx
 import numpy as np
-
-
-UNK = '<unk>'
-PAD = '<pad>'
+from mxnet import gluon
 
 
 def clean_str(string):
@@ -86,66 +84,56 @@ def pad_sequences(sequences, max_len, pad_value):
     return paded_seqs
 
 
-def get_vocab(sentences, wv_name):
-    '''
-    Get the vocab that is a instance of nlp.Vocab
-    Args:
-        sentences: all sentences, a list of str.
-        wv_name: one of {'glove', 'w2v', 'fasttext', 'random'}.The way the representative word is embedded.
-    Returns:
-        my_vocab: a instance of nlp.Vocab
-    '''
-    tokens = []
-    for sent in sentences:
-        tokens.extend(clean_str(sent).split())
-
-    token_counter = nlp.data.count_tokens(tokens)
-    my_vocab = nlp.Vocab(token_counter)
-
+def set_embedding_for_vocab(vocab, wv_name):
     if wv_name == 'glove':
-        my_embedding = nlp.embedding.GloVe(
+        pretrain_embedding = nlp.embedding.GloVe(
             source='glove.6B.50d', embedding_root='..data/embedding')
     elif wv_name == 'w2v':
-        my_embedding = nlp.embedding.Word2Vec(
+        pretrain_embedding = nlp.embedding.Word2Vec(
             source='GoogleNews-vectors-negative300', embedding_root='..data/embedding')
     elif wv_name == 'fasttext':
-        my_embedding = nlp.embedding.FastText(
+        pretrain_embedding = nlp.embedding.FastText(
             source='wiki.simple', embedding_root='..data/embedding')
     else:
-        my_embedding = None
+        pretrain_embedding = None
 
-    if my_embedding is not None:
-        my_vocab.set_embedding(my_embedding)
-
-    return my_vocab
+    if pretrain_embedding is not None:
+        vocab.set_embedding(pretrain_embedding)
 
 
-def sentences2idx(sentences, my_vocab):
-    '''
-    Convert all words of sentences their corresponding index in the vocabulary.
-    Args:
-        sentences: all sentences, a list of str.
-        my_vocab: a instance of nlp.Vocab
-    Retruns:
-        sentences_idx: all index of all words, a list of list.
-    '''
-    sentences_indices = []
-    for sent in sentences:
-        sentences_indices.append(my_vocab.to_indices(clean_str(sent).split()))
-    return sentences_indices
+def preprocess_data(sentences, wv_name, max_seq_len=100):
+    clipper = nlp.data.ClipSequence(max_seq_len)
+    tokenizer = nlp.data.SpacyTokenizer(lang='en')
+    sentences = [clipper(tokenizer(clean_str(sentence))) for sentence in sentences]
+
+    # count tokens and build vocab
+    tokens = list(itertools.chain.from_iterable(sentences))
+    token_counter = nlp.data.count_tokens(tokens)
+    vocab = nlp.Vocab(token_counter)
+
+    # loading pretrained embedding
+    set_embedding_for_vocab(vocab, wv_name)
+
+    # Convert all words of sentences their corresponding index in the vocabulary
+    sentences_idx = [vocab[sentence] for sentence in sentences]
+
+    return vocab, sentences_idx
 
 
-def get_data(data_json_path, wv_name, formated_data_path):
-    '''
-    Process raw data and obtain standard data that can be used for model training.
-    Args:
-        data_json_path: the path of raw data. This is a json file.
-        wv_name: one of {'glove', 'w2v', 'fasttext', 'random'}.The way the representative word is embedded.
-        formated_data_path: The path to save the processed standard data.
+def get_data(data_json_path=None, wv_name=None, formated_data_path=None, max_seq_len=100):
+    """Process raw data and obtain standard data that can be used for model training.
+
+    Args:   
+        data_json_path (str, optional): Defaults to None. 
+         the path of raw data. This is a json file.
+        wv_name (str, optional): Defaults to None. one of {'glove', 'w2v', 'fasttext', 'random'}.
+        formated_data_path (str, optional): Defaults to None.
+         The path to save the processed standard data.
+        max_seq_len (int, optional): Defaults to 10. max length of every sample.
+
     Returns:
-        formated_data: A dict.
-    Returns
-    '''
+        dict: dict of data
+    """
 
     if os.path.exists(formated_data_path):
         with open(formated_data_path, 'rb') as f:
@@ -155,19 +143,49 @@ def get_data(data_json_path, wv_name, formated_data_path):
             data = json.load(fr)
         sentences, labels = data['texts'], data['labels']
 
-        my_vocab = get_vocab(sentences, wv_name)
-        pad_num_value = my_vocab.to_indices(PAD)
+        # data processing
+        vocab, x = preprocess_data(sentences, wv_name, max_seq_len=max_seq_len)
+        y = np.array(labels) - 1
 
-        # Convert input data to integer index (将输入数据转为整数索引)
-        input_idx = sentences2idx(sentences, my_vocab)
-
-        # Prepare train and validate data iterators (准备训练和验证数据迭代器)
-        max_seq_len = 100
-        input_paded = pad_sequences(input_idx, max_seq_len, pad_num_value)
-        labels = np.array(labels).reshape((-1, 1)) - 1
-
-        formated_data = {'x': input_paded, 'y': labels, 'vocab': my_vocab}
+        # save processed data
+        formated_data = {'x': x, 'y': y, 'vocab': vocab}
         with open(formated_data_path, 'wb') as fw:
             pickle.dump(formated_data, fw)
 
     return formated_data
+
+
+def get_dataloader(dataset, batch_size, is_train=True):
+
+    # Construct the DataLoader Pad data, stack label and lengths
+    batchify_fn = nlp.data.batchify.Tuple(
+        nlp.data.batchify.Pad(axis=0),
+        nlp.data.batchify.Stack())
+
+    dataloader = None
+
+    # dataloader for training
+    if is_train:
+        data_lengths = [len(sample[0]) for sample in dataset]
+
+        # n this example, we use a FixedBucketSampler,
+        # which assigns each data sample to a fixed bucket based on its length.
+        batch_sampler = nlp.data.sampler.FixedBucketSampler(
+            data_lengths,
+            batch_size=batch_size,
+            num_buckets=10,
+            ratio=0.2,
+            shuffle=True)
+        dataloader = gluon.data.DataLoader(
+            dataset=dataset,
+            batch_sampler=batch_sampler,
+            batchify_fn=batchify_fn)
+    # dataloader for not training
+    else:
+        dataloader = gluon.data.DataLoader(
+            dataset=dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            batchify_fn=batchify_fn)
+
+    return dataloader
