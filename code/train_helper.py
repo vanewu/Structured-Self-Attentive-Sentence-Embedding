@@ -63,7 +63,7 @@ def calculate_loss(x, y, model, loss, loss_name, class_weight, penalization_coef
 
 def train(train_dataloader, valid_dataloader, model, loss, trainer, ctx,
           nepochs, penalization_coeff, clip, class_weight, loss_name,
-          model_root, model_name):
+          model_root, model_name, log_interval, lr_decay_step, lr_decay_rate):
     """Function used in training
 
     Args:
@@ -80,11 +80,15 @@ def train(train_dataloader, valid_dataloader, model, loss, trainer, ctx,
         loss_name (str): name of loss function
         model_root (str): root path of model
         model_name (str): name of model
+        log_interval (int): interval steps of log output
+        lr_decay_step (int): step of learning rate decay
+        lr_decay_rate (float): rate of learning rate decay
     """
 
     print('Train on ', ctx)
 
     parameters = [p for p in model.collect_params().values() if p.grad_req != 'null']
+    init_lr = trainer.learning_rate
     for epoch in range(1, nepochs + 1):
         start = time()
         best_F1_valid = 0.
@@ -115,7 +119,7 @@ def train(train_dataloader, valid_dataloader, model, loss, trainer, ctx,
 
             train_loss += batch_train_loss
 
-            if (nbatch + 1) % 400 == 0:
+            if (nbatch + 1) % log_interval == 0:
                 print('epoch %d, batch %d, bach_train_loss %.4f, batch_train_acc %.3f' %
                       (epoch, nbatch + 1, batch_train_loss, accuracy_score(batch_true, batch_pred)))
 
@@ -135,8 +139,8 @@ def train(train_dataloader, valid_dataloader, model, loss, trainer, ctx,
               '\ntime %.1f sec' % (valid_loss, acc_valid, F1_valid, time() - start))
 
         # learning rate decay
-        if epoch % 2 == 0:
-            trainer.set_learning_rate(trainer.learning_rate * 0.9)
+        if epoch % lr_decay_step == 0:
+            trainer.set_learning_rate(init_lr / (1.0 + lr_decay_rate * epoch))
 
         # save best model structure and parameters
         if F1_valid > best_F1_valid:

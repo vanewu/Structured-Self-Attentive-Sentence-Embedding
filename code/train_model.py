@@ -187,6 +187,12 @@ if __name__ == '__main__':
     parser.add_argument('--optimizer', type=str, default='Adam', help='type of optimizer')
     parser.add_argument('--penalization_coeff', type=float, default=0.1,
                         help='the penalization coefficient')
+    parser.add_argument('--lr_decay_step', type=int, default=2,
+                        help='step of learning rate decay')
+    parser.add_argument('--lr_decay_rate', type=float, default=0.1,
+                        help='rate of learning rate decay')
+    parser.add_argument('--log_interval', type=int, default=400,
+                        help='interval steps of log output')
 
     parser.add_argument('--valid_rate', type=float, default=0.1,
                         help='proportion of validation set samples')
@@ -225,6 +231,9 @@ if __name__ == '__main__':
     loss_name = args.loss_name
     model_root = args.model_root
     model_name = args.model_name
+    log_interval = args.log_interval
+    lr_decay_step = args.lr_decay_step
+    lr_decay_rate = args.lr_decay_rate
     th.train(train_dataloader, valid_dataloader, model, loss, trainer, ctx,
              nepochs, penalization_coeff, clip, class_weight, loss_name,
-             model_name, model_root)
+             model_name, model_root, log_interval, lr_decay_step, lr_decay_rate)
