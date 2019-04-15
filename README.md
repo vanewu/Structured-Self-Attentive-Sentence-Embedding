@@ -99,7 +99,7 @@ $$ P = ||(AA^T-I)||_F^2 $$
    Training usage (parameters can be customized):  
 
    ```python
-   python train_model.py --nlayers 1 --epochs 5 --attention-hops 2 --loss-name sce
+   python train_model.py --nlayers 1 --nepochs 5 --natt_hops 2 --loss_name sce
    ```
 
 ## Reference
