@@ -92,6 +92,7 @@ def train(train_dataloader, valid_dataloader, model, loss, trainer, ctx,
     for epoch in range(1, nepochs + 1):
         start = time()
         best_F1_valid = 0.
+        best_epoch = 1
         train_loss = 0.
         total_pred = []
         total_true = []
@@ -151,9 +152,10 @@ def train(train_dataloader, valid_dataloader, model, loss, trainer, ctx,
             if not os.path.exists(model_dir):
                 os.makedirs(model_dir)
             model_path = os.path.join(model_dir, 'self_att_bilstm_model')
-            model.export(model_path)
-            print('best f1: %d, best epoch: %d, model structure'
-                  ' and parameters saved in: %s' % (best_F1_valid, best_epoch, model_path))
+            model.export(model_path, epoch=best_epoch)
+
+        print('best f1: %.4f, best epoch: %d, model structure'
+              ' and parameters saved in: %s' % (best_F1_valid, best_epoch, model_path))
         print('=' * 50)
 
 
