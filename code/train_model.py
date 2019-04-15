@@ -165,7 +165,7 @@ if __name__ == '__main__':
                         help='number of attention hops, for multi-hop attention model')
     parser.add_argument('--nfc', type=int, default=512,
                         help='hidden (fully connected) layer size for classifier MLP')
-    parser.add_argument('--pool_way', type=str, choice=['flatten', 'mean', 'prune'],
+    parser.add_argument('--pool_way', type=str, choices=['flatten', 'mean', 'prune'],
                         default='flatten', help='pool att output way')
     parser.add_argument('--nprune_p', type=int, default=None, help='prune p size')
     parser.add_argument('--nprune_q', type=int, default=None, help='prune q size')
@@ -179,7 +179,7 @@ if __name__ == '__main__':
                         help='clip to prevent the too large grad in LSTM')
     parser.add_argument('--lr', type=float, default=.001, help='initial learning rate')
     parser.add_argument('--nepochs', type=int, default=10, help='upper epoch limit')
-    parser.add_argument('--loss_name', type=str, choice=['sce, wsce'],
+    parser.add_argument('--loss_name', type=str, choices=['sce, wsce'],
                         default='sce', help='loss function name')
     parser.add_argument('--freeze_embedding', default=False, action='store_true')
     parser.add_argument('--seed', type=int, default=2018, help='random seed')
